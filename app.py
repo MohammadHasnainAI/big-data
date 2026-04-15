@@ -173,25 +173,28 @@ def load_all_assets():
 df, tfidf, nb_model, dl_model, tokenizer, deep_engine_status = load_all_assets()
 
 # -------------------------------------------------------------------------
-# 4. SIDEBAR NAVIGATION
+# 4. SIDEBAR NAVIGATION (Upgraded to Apple Style)
 # -------------------------------------------------------------------------
-st.sidebar.image("https://cdn-icons-png.flaticon.com/512/732/732100.png", width=60) # Apple-like logo
+st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2103/2103633.png", width=80)
 st.sidebar.title("Navigation")
 
-# Connect the sidebar to the session state!
+# Connect the sidebar radio to the session state!
 menu = st.sidebar.radio("Go to:", ["Home", "Intelligence Tool", "Project Details"], key="nav_menu")
 
 st.sidebar.markdown("---")
 
+# UPGRADED STUDENT PROFILE CARD
 st.sidebar.markdown("""
-    <div style="background-color: #FFFFFF; padding: 20px; border-radius: 16px; box-shadow: 0 4px 14px rgba(0,0,0,0.03);">
-        <p style="color: #86868B; font-size: 12px; margin-bottom: 4px; font-weight: 600;">DEVELOPED BY</p>
-        <p style="color: #1D1D1F; font-size: 16px; font-weight: 600; margin: 0;">Mohammad Hasnain</p>
-        <p style="color: #0071E3; font-size: 13px; margin: 0;">BS Artificial Intelligence</p>
+    <div style="background-color: #FFFFFF; padding: 20px; border-radius: 16px; box-shadow: 0 4px 14px rgba(0,0,0,0.03); border: 1px solid #E5E5EA;">
+        <p style="color: #86868B; font-size: 11px; margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Developed by</p>
+        <p style="color: #1D1D1F; font-size: 17px; font-weight: 600; margin: 0; letter-spacing: -0.3px;">Mohammad Hasnain</p>
+        <p style="color: #0071E3; font-size: 13px; margin: 4px 0 0 0; font-weight: 500;">BS Artificial Intelligence</p>
     </div>
 """, unsafe_allow_html=True)
 
 st.sidebar.markdown("---")
+
+# DUAL ENGINE STATUS
 if deep_engine_status:
     st.sidebar.success(f"✅ Dual-Engine Online\n\n📊 {len(df):,} Reviews")
 else:
@@ -216,7 +219,6 @@ if menu == "Home":
     """)
     
     st.write("")
-    # THE MISSING BUTTON IS HERE!
     st.button("Launch Intelligence Tool", on_click=go_to_tool)
 
 # -------------------------------------------------------------------------
@@ -253,7 +255,6 @@ elif menu == "Intelligence Tool":
                 time.sleep(2.0)
                 
                 # --- PREDICTIONS ---
-                # Engine 1
                 input_vec = tfidf.transform([user_input])
                 nb_pred = nb_model.predict(input_vec)[0]
                 nb_conf = np.max(nb_model.predict_proba(input_vec)[0])
@@ -261,7 +262,6 @@ elif menu == "Intelligence Tool":
                 nb_class = "pos" if nb_pred == 'positive' else "neg"
                 nb_emoji = "😊" if nb_pred == 'positive' else "😡"
                 
-                # Engine 2
                 if deep_engine_status:
                     seq = tokenizer.texts_to_sequences([user_input])
                     padded = pad_sequences(seq, maxlen=100, padding='post', truncating='post')
@@ -273,7 +273,6 @@ elif menu == "Intelligence Tool":
                     dl_emoji = "😊" if dl_sent == 'positive' else "😡"
 
                 # --- RENDER HTML ---
-                # BUG FIXED: HTML is completely flush to the left so it doesn't break
                 html_output = f"""
 <div class="mac-card">
 <div class="engine-title">⚡ Fast Engine (Naive Bayes)</div>
@@ -306,7 +305,6 @@ elif menu == "Project Details":
     
     st.markdown("---")
 
-    # ADDED PIPELINE SECTION
     st.markdown("### 🛠️ System Architecture (The Big Data Pipeline)")
     st.write("This system was built to handle the **Volume** and **Variety** of the Yelp Open Dataset.")
     
