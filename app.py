@@ -1,13 +1,34 @@
-
 import streamlit as st
 import pandas as pd
 import time
 import random
+import pickle
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 
 # -------------------------------------------------------------------------
-# 1. APP CONFIGURATION
+# 1. CUSTOM ATTENTION LAYER (Required for Deep Learning Model)
+# -------------------------------------------------------------------------
+@tf.keras.utils.register_keras_serializable()
+class SimpleAttention(tf.keras.layers.Layer):
+    def __init__(self, **kwargs):
+        super(SimpleAttention, self).__init__(**kwargs)
+    def build(self, input_shape):
+        self.W = self.add_weight(name='att_weight', shape=(input_shape[-1], 1), initializer='normal')
+        self.b = self.add_weight(name='att_bias', shape=(input_shape[1], 1), initializer='zeros')
+        super(SimpleAttention, self).build(input_shape)
+    def call(self, x):
+        e = tf.keras.backend.tanh(tf.keras.backend.dot(x, self.W) + self.b)
+        a = tf.keras.backend.softmax(e, axis=1)
+        output = x * a
+        return tf.keras.backend.sum(output, axis=1)
+
+# -------------------------------------------------------------------------
+# 2. APP CONFIGURATION & PROFESSIONAL CSS
 # -------------------------------------------------------------------------
 st.set_page_config(
     page_title="Intelligence: Big Data Analyzer",
@@ -16,9 +37,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# -------------------------------------------------------------------------
-# 2. PROFESSIONAL STYLING (CSS)
-# -------------------------------------------------------------------------
 st.markdown("""
     <style>
     #MainMenu {visibility: hidden;}
@@ -34,11 +52,13 @@ st.markdown("""
         border: none;
         padding: 10px 24px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
     }
     div.stButton > button:hover {
         background-color: #b31e1e;
         color: white;
-        box-shadow: 0 6px 8px rgba(0,0,0,0.2);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        transform: translateY(-2px);
     }
     
     /* Metrics Styling */
@@ -47,38 +67,50 @@ st.markdown("""
         color: #D32323;
     }
     
-    /* Quote Box Styling */
-    .stAlert {
-        background-color: #f0f2f6;
-        border: 1px solid #ddd;
+    /* Premium Result Cards */
+    .result-card {
+        padding: 20px; 
+        border-radius: 12px; 
+        margin-bottom: 15px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        border-left: 6px solid;
     }
+    .positive-card { background-color: #f0fdf4; border-color: #22c55e; }
+    .negative-card { background-color: #fef2f2; border-color: #ef4444; }
+    .card-title { margin: 0; font-size: 1.1rem; color: #374151; font-weight: 600; text-transform: uppercase;}
+    .card-conf { margin: 5px 0 0 0; font-size: 1.5rem; font-weight: bold; }
+    .pos-text { color: #15803d; }
+    .neg-text { color: #b91c1c; }
     </style>
 """, unsafe_allow_html=True)
 
 # -------------------------------------------------------------------------
-# 3. BACKEND: LOAD DATA & TRAIN MODEL
+# 3. BACKEND: LOAD BOTH MODELS (CACHED FOR SPEED)
 # -------------------------------------------------------------------------
-@st.cache_data
-def load_data():
-    csv_file = "yelp_web.csv"
+@st.cache_resource
+def load_all_assets():
+    # 1. Load Naive Bayes (Fast Engine)
+    df = pd.read_csv("yelp_web.csv").dropna(subset=['text'])
+    df = df[df['stars'] != 3]
+    df['sentiment'] = df['stars'].apply(lambda x: 'positive' if x > 3 else 'negative')
+    
+    tfidf = TfidfVectorizer(stop_words='english', ngram_range=(1,2), max_features=5000)
+    X_vec = tfidf.fit_transform(df['text'])
+    nb_model = MultinomialNB().fit(X_vec, df['sentiment'])
+    
+    # 2. Load Attention LSTM (Deep Engine)
     try:
-        df = pd.read_csv(csv_file)
-        df = df.dropna(subset=['text'])
-        df = df[df['stars'] != 3]
-        df['sentiment'] = df['stars'].apply(lambda x: 'positive' if x > 3 else 'negative')
-        return df
-    except FileNotFoundError:
-        st.error("❌ Error: 'yelp_web.csv' not found. Please upload it to GitHub.")
-        st.stop()
+        dl_model = load_model('sentiment_attention_model.keras', custom_objects={'SimpleAttention': SimpleAttention})
+        with open('tokenizer.pkl', 'rb') as handle:
+            tokenizer = pickle.load(handle)
+        deep_engine_status = True
+    except Exception as e:
+        dl_model, tokenizer = None, None
+        deep_engine_status = False
 
-df = load_data()
+    return df, tfidf, nb_model, dl_model, tokenizer, deep_engine_status
 
-# Train Model
-tfidf = TfidfVectorizer(stop_words='english', ngram_range=(1,2), max_features=5000)
-X_vec = tfidf.fit_transform(df['text'])
-y = df['sentiment']
-model = MultinomialNB()
-model.fit(X_vec, y)
+df, tfidf, nb_model, dl_model, tokenizer, deep_engine_status = load_all_assets()
 
 # -------------------------------------------------------------------------
 # 4. SIDEBAR NAVIGATION
@@ -89,7 +121,6 @@ menu = st.sidebar.radio("Go to:", ["Home", "Intelligence Tool", "Project Details
 
 st.sidebar.markdown("---")
 
-# STUDENT PROFILE CARD
 st.sidebar.markdown("""
     <div style="background-color: #e6f3ff; padding: 15px; border-radius: 10px; border-left: 5px solid #2196f3;">
         <small>Developed by:</small><br>
@@ -99,7 +130,10 @@ st.sidebar.markdown("""
 """, unsafe_allow_html=True)
 
 st.sidebar.markdown("---")
-st.sidebar.caption(f"✅ System Online | {len(df):,} Reviews")
+if deep_engine_status:
+    st.sidebar.success(f"✅ Dual-Engine Online\n\n📊 {len(df):,} Reviews")
+else:
+    st.sidebar.warning(f"⚠️ Fast Engine Only\n\n📊 {len(df):,} Reviews")
 
 # -------------------------------------------------------------------------
 # 5. PAGE: HOME
@@ -109,101 +143,96 @@ if menu == "Home":
     st.image("https://cdn.dribbble.com/users/2064121/screenshots/15865261/media/58102a06145892552601724682057636.jpg?compress=1&resize=1200x900", use_column_width=True)
     
     st.markdown("""
-    ### Welcome to the Big Data Feedback System
-    This project uses **Machine Learning (Naive Bayes)** and **Big Data Processing** to analyze customer sentiment from the **Yelp Open Dataset**.
+    ### Welcome to the Advanced Feedback System
+    This project combines **Machine Learning (Naive Bayes)** and **Deep Learning (Attention LSTM)** to analyze customer sentiment.
 
     **Key Features:**
-    - ⚡ **Real-time NLP Analysis** of unstructured text.
-    - ⚖️ **Balanced Dataset** (Undersampling) to prevent bias.
-    - 📂 **Big Data Pipeline** handling 8GB+ of raw JSON data.
+    - ⚡ **Dual-Engine NLP Analysis:** Compares statistical ML with Deep Learning.
+    - ⚖️ **Balanced Dataset:** Undersampled Yelp Big Data.
+    - 🧠 **Context Awareness:** LSTM understands the sequence and context of words.
 
-    👈 Select **Intelligence Tool** from the sidebar to start the analysis.
+    👈 Select **Intelligence Tool** from the sidebar to test the AI.
     """)
 
 # -------------------------------------------------------------------------
-# 6. PAGE: INTELLIGENCE TOOL (The App)
+# 6. PAGE: INTELLIGENCE TOOL
 # -------------------------------------------------------------------------
 elif menu == "Intelligence Tool":
     st.title("🚀 Customer Feedback Analyzer")
-    st.write("Enter unstructured review text below to detect sentiment using AI.")
-    
+    st.write("Enter unstructured review text below to detect sentiment using our Dual-Engine AI.")
     st.divider()
 
-    col1, col2 = st.columns([2, 1], gap="medium")
+    col1, col2 = st.columns([1.5, 1], gap="large")
 
     with col1:
         user_input = st.text_area("✍️ Input Feedback:", height=200, placeholder="Example: The service was slow but the food was absolutely delicious!")
-        analyze_btn = st.button("Analyze Sentiment", type="primary")
+        analyze_btn = st.button("Run Dual-Engine Analysis", type="primary")
 
     with col2:
-        st.write("#### 🔍 Prediction Result")
-        
-        # Create a placeholder for the quote
+        st.write("#### 🔍 Prediction Results")
         quote_placeholder = st.empty()
+        results_placeholder = st.empty()
         
         if analyze_btn:
             if user_input.strip():
-                # --- QUOTES LIST (15 Quotes) ---
+                # --- QUOTES LIST ---
                 quotes = [
                     "**“It always seems impossible until it’s done.”**\n— Steve Jobs",
-                    "**“In the middle of every difficulty lies opportunity.”**\n— Nelson Mandela",
                     "**“The future depends on what you do today.”**\n— Albert Einstein",
-                    "**“Don’t let yesterday take up too much of today.”**\n— Mahatma Gandhi",
-                    "**“Act as if what you do makes a difference. It does.”**\n— Will Rogers",
                     "**“Opportunities don't happen, you create them.”**\n— William James",
-                    "**“Success is walking from failure to failure with no loss of enthusiasm.”**\n— Chris Grosser",
                     "**“The secret of getting ahead is getting started.”**\n— Winston Churchill",
-                    "**“What you get by achieving your goals is not as important as what you become by achieving your goals.”**\n— Mark Twain",
-                    "**“Hardships often prepare ordinary people for an extraordinary destiny.”**\n— Zig Ziglar",
-                    "**“Quality is not an act, it is a habit.”**\n— C.S. Lewis",
-                    "**“Everything you’ve ever wanted is sitting on the other side of fear.”**\n— Aristotle",
-                    "**“Do what you can, with what you have, where you are.”**\n— George Addair",
-                    "**“A journey of a thousand miles begins with a single step.”**\n— Theodore Roosevelt",
-                    "**“The journey of a thousand miles begins with one step.”**\n— Lao Tzu"
+                    "**“A journey of a thousand miles begins with a single step.”**\n— Lao Tzu"
                 ]
-                
                 selected_quote = random.choice(quotes)
                 
-                # 1. SHOW QUOTE DURING PROCESSING
-                quote_placeholder.info(f"💡 **Processing Big Data...**\n\n{selected_quote}")
+                # 1. SHOW QUOTE & SPINNER
+                quote_placeholder.info(f"💡 **Processing via Neural Networks...**\n\n{selected_quote}")
                 
-                with st.spinner("Analyzing vectors..."):
+                with st.spinner("Analyzing text vectors & attention weights..."):
                     time.sleep(2.5) 
                 
-                # 2. PERFORM PREDICTION
+                # 2. RUN ENGINE 1: NAIVE BAYES
                 input_vec = tfidf.transform([user_input])
-                prediction = model.predict(input_vec)[0]
-                probs = model.predict_proba(input_vec)[0]
+                nb_pred = nb_model.predict(input_vec)[0]
+                nb_conf = np.max(nb_model.predict_proba(input_vec)[0])
                 
-                conf_neg = probs[0]
-                conf_pos = probs[1]
+                # Format Naive Bayes UI
+                nb_css = "positive-card" if nb_pred == 'positive' else "negative-card"
+                nb_text_css = "pos-text" if nb_pred == 'positive' else "neg-text"
+                nb_emoji = "😊" if nb_pred == 'positive' else "😡"
                 
-                # 3. SHOW RESULT
-                if prediction == 'positive':
-                    st.markdown(f"""
-                        <div style="background-color: #d4edda; padding: 20px; border-radius: 10px; border-left: 5px solid #28a745;">
-                            <h3 style="color: #155724; margin:0;">😊 POSITIVE RESPONSE</h3>
-                            <p>Confidence: <b>{conf_pos*100:.1f}%</b></p>
-                        </div>
-                    """, unsafe_allow_html=True)
-                    st.progress(conf_pos)
-                else:
-                    st.markdown(f"""
-                        <div style="background-color: #f8d7da; padding: 20px; border-radius: 10px; border-left: 5px solid #dc3545;">
-                            <h3 style="color: #721c24; margin:0;">😡 NEGATIVE RESPONSE</h3>
-                            <p>Confidence: <b>{conf_neg*100:.1f}%</b></p>
-                        </div>
-                    """, unsafe_allow_html=True)
-                    st.progress(conf_neg)
+                html_output = f"""
+                <div class="result-card {nb_css}">
+                    <p class="card-title">⚡ Fast Engine (Naive Bayes)</p>
+                    <p class="card-conf {nb_text_css}">{nb_emoji} {nb_pred.upper()} <span style="font-size:1rem; font-weight:normal;">({nb_conf*100:.1f}%)</span></p>
+                </div>
+                """
                 
-                # 4. SHOW QUOTE AFTER PREDICTION (For 15 Seconds)
-                # We update the text to indicate it's an 'Inspiration' now
+                # 3. RUN ENGINE 2: ATTENTION LSTM (If available)
+                if deep_engine_status:
+                    seq = tokenizer.texts_to_sequences([user_input])
+                    padded = pad_sequences(seq, maxlen=100, padding='post', truncating='post')
+                    dl_prob = dl_model.predict(padded)[0][0]
+                    dl_sent = "positive" if dl_prob > 0.5 else "negative"
+                    dl_conf = dl_prob if dl_prob > 0.5 else (1 - dl_prob)
+                    
+                    dl_css = "positive-card" if dl_sent == 'positive' else "negative-card"
+                    dl_text_css = "pos-text" if dl_sent == 'positive' else "neg-text"
+                    dl_emoji = "😊" if dl_sent == 'positive' else "😡"
+                    
+                    html_output += f"""
+                    <div class="result-card {dl_css}">
+                        <p class="card-title">🧠 Deep Engine (Attention LSTM)</p>
+                        <p class="card-conf {dl_text_css}">{dl_emoji} {dl_sent.upper()} <span style="font-size:1rem; font-weight:normal;">({dl_conf*100:.1f}%)</span></p>
+                    </div>
+                    """
+                
+                # 4. SHOW RESULTS & INSPIRATION
+                results_placeholder.markdown(html_output, unsafe_allow_html=True)
                 quote_placeholder.info(f"✨ **Inspiration for you:**\n\n{selected_quote}")
                 
-                # Wait 15 seconds so user can read it
+                # Wait 15 seconds then clear quote
                 time.sleep(15)
-                
-                # Finally clear the quote
                 quote_placeholder.empty()
 
             else:
@@ -220,21 +249,18 @@ elif menu == "Project Details":
     st.markdown("""
     ### Big Data Management & Processing
     **Student:** Mohammad Hasnain  
-    **Program:** BS Artificial Intelligence (5th Semester)
+    **Program:** BS Artificial Intelligence
 
     ---
-
     #### 🎓 Academic Supervision
     **Supervisor:** Engr. Aneela Habib  
     *Big Data Management and Processing*
-
     ---
     """)
 
     st.markdown("### 📊 Dataset Statistics")
     st.write("To ensure the AI is not biased, the dataset was strictly balanced.")
     
-    # METRICS
     m1, m2, m3 = st.columns(3)
     m1.metric("Total Records", f"{len(df):,}")
     m2.metric("Positive Samples", f"{len(df[df['sentiment']=='positive']):,}")
@@ -242,30 +268,16 @@ elif menu == "Project Details":
     
     st.write("")
     st.markdown("**Visualizing Class Balance:**")
-    
-    # CHART - Uses the Red Brand Color
     chart_data = df['sentiment'].value_counts()
     st.bar_chart(chart_data, color="#D32323")
-    
     st.caption("Figure 1: Perfect 50/50 Class Balance achieved via Undersampling Algorithm.")
 
     st.markdown("""
     ---
-    ### 🛠️ System Architecture (The Big Data Pipeline)
-    This system was built to handle the **Volume** and **Variety** of the Yelp Open Dataset.
+    ### 🛠️ Dual-Engine Architecture
+    This system was upgraded to handle both speed and context understanding.
 
-    1.  **Data Ingestion (Chunking):** - The raw file was **8.6 GB** (JSON).
-        - Used Python Generators to stream data line-by-line to avoid Memory Overflow (RAM Crash).
-    
-    2.  **ETL & Preprocessing:**
-        - **Extraction:** Parsed JSON to CSV.
-        - **Transformation:** Removed 3-star (neutral) reviews to sharpen accuracy.
-        - **Balancing:** Detected Class Imbalance (80% Positive) and applied **Undersampling** to create a perfect 50/50 split.
-
-    3.  **Machine Learning:**
-        - **Vectorization:** TF-IDF (Term Frequency-Inverse Document Frequency).
-        - **Model:** Multinomial Naive Bayes (Probabilistic Classifier).
-    
-    ---
-    **Dataset Source:** [Yelp Open Dataset](https://www.yelp.com/dataset)
+    1. **Data Ingestion & Balancing:** Streamed 8.6 GB of raw Yelp JSON data and applied undersampling for a 50/50 split.
+    2. **Engine 1 (Fast): Multinomial Naive Bayes.** Uses TF-IDF vectorization to probabilistically map words to sentiments. Highly efficient for Big Data.
+    3. **Engine 2 (Deep): Custom Attention LSTM.** A neural network that uses an Attention Mechanism to "look back" at previous words in a sentence, allowing it to understand complex context and sarcasm.
     """)
