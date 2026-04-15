@@ -28,7 +28,7 @@ class SimpleAttention(tf.keras.layers.Layer):
         return tf.keras.backend.sum(output, axis=1)
 
 # -------------------------------------------------------------------------
-# 2. APP CONFIGURATION & APPLE-STYLE CSS
+# 2. APP CONFIGURATION & ULTRA-SMOOTH APPLE CSS
 # -------------------------------------------------------------------------
 st.set_page_config(
     page_title="Intelligence: Big Data Analyzer",
@@ -37,7 +37,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Apple macOS Premium Styling
 st.markdown("""
     <style>
     /* Global Apple Font & Background */
@@ -48,7 +47,7 @@ st.markdown("""
     }
     
     .stApp {
-        background-color: #F5F5F7; /* Apple Light Gray Background */
+        background-color: #F5F5F7; /* Apple Light Gray */
         color: #1D1D1F;
     }
 
@@ -57,61 +56,70 @@ st.markdown("""
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
-    /* Apple Pill Button */
+    /* Ultra-Smooth Apple Pill Button */
     div.stButton > button {
         background-color: #0071E3; /* Apple Blue */
-        color: white;
-        font-size: 15px;
-        font-weight: 600;
-        border-radius: 980px; /* Pill Shape */
-        border: none;
-        padding: 12px 28px;
-        box-shadow: 0 4px 14px rgba(0, 113, 227, 0.3);
-        transition: all 0.3s ease;
+        color: white !important;
+        font-size: 16px !important;
+        font-weight: 600 !important;
+        border-radius: 980px !important; /* Perfect Pill Shape */
+        border: none !important;
+        padding: 14px 32px !important;
+        box-shadow: 0 4px 14px rgba(0, 113, 227, 0.3) !important;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
     }
     div.stButton > button:hover {
-        background-color: #0077ED;
-        transform: scale(1.02);
-        box-shadow: 0 6px 20px rgba(0, 113, 227, 0.4);
+        background-color: #0077ED !important;
+        transform: scale(1.03) !important; /* Smooth pop-out effect */
+        box-shadow: 0 8px 24px rgba(0, 113, 227, 0.45) !important;
+    }
+    div.stButton > button:active {
+        transform: scale(0.98) !important; /* Satisfying click effect */
     }
     
-    /* Input Text Area */
+    /* Input Text Area Refinement */
     .stTextArea textarea {
         background-color: #FFFFFF;
-        border-radius: 14px;
-        border: 1px solid #D2D2D7;
-        padding: 16px;
+        border-radius: 16px;
+        border: 1px solid #E5E5EA;
+        padding: 18px;
         font-size: 16px;
-        box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        transition: border-color 0.3s ease;
     }
     .stTextArea textarea:focus {
         border-color: #0071E3;
-        box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+        box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.15);
     }
 
-    /* Apple Glass Cards */
+    /* Apple Premium Glass Cards */
     .mac-card {
-        background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: saturate(180%) blur(20px);
-        -webkit-backdrop-filter: saturate(180%) blur(20px);
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: saturate(180%) blur(25px);
+        -webkit-backdrop-filter: saturate(180%) blur(25px);
         border-radius: 20px;
         padding: 24px;
         margin-bottom: 20px;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.04);
-        border: 1px solid rgba(255,255,255,0.4);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        border: 1px solid rgba(255,255,255,0.6);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .mac-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.08);
     }
     
     .engine-title {
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 1.2px;
         color: #86868B;
-        margin-bottom: 8px;
+        margin-bottom: 10px;
     }
     
     .result-text {
-        font-size: 28px;
+        font-size: 32px;
         font-weight: 700;
         margin: 0;
     }
@@ -120,10 +128,10 @@ st.markdown("""
     .neg { color: #FF3B30; } /* Apple Red */
     
     .conf-text {
-        font-size: 14px;
+        font-size: 15px;
         color: #86868B;
         font-weight: 400;
-        margin-top: 4px;
+        margin-top: 6px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -233,7 +241,6 @@ elif menu == "Intelligence Tool":
                 time.sleep(2.0)
                 
                 # --- PREDICTIONS ---
-                # Engine 1
                 input_vec = tfidf.transform([user_input])
                 nb_pred = nb_model.predict(input_vec)[0]
                 nb_conf = np.max(nb_model.predict_proba(input_vec)[0])
@@ -241,7 +248,6 @@ elif menu == "Intelligence Tool":
                 nb_class = "pos" if nb_pred == 'positive' else "neg"
                 nb_emoji = "😊" if nb_pred == 'positive' else "😡"
                 
-                # Engine 2
                 if deep_engine_status:
                     seq = tokenizer.texts_to_sequences([user_input])
                     padded = pad_sequences(seq, maxlen=100, padding='post', truncating='post')
@@ -252,8 +258,7 @@ elif menu == "Intelligence Tool":
                     dl_class = "pos" if dl_sent == 'positive' else "neg"
                     dl_emoji = "😊" if dl_sent == 'positive' else "😡"
 
-                # --- RENDER HTML ---
-                # Notice there is NO indentation in the HTML string, fixing the formatting bug!
+                # --- RENDER HTML (BUG FIXED: NO INDENTATION ALLOWED HERE) ---
                 html_output = f"""
 <div class="mac-card">
 <div class="engine-title">⚡ Fast Engine (Naive Bayes)</div>
@@ -273,7 +278,6 @@ elif menu == "Intelligence Tool":
                     st.markdown(html_output, unsafe_allow_html=True)
                 
                 quote_placeholder.empty()
-
             else:
                 st.warning("⚠️ Please enter text first.")
 
@@ -282,38 +286,61 @@ elif menu == "Intelligence Tool":
 # -------------------------------------------------------------------------
 elif menu == "Project Details":
     st.title("Project Architecture")
-    st.markdown("<p style='color: #86868B; font-size: 18px;'>Deep dive into the models powering this application.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #86868B; font-size: 18px;'>Deep dive into the models and Big Data pipeline powering this application.</p>", unsafe_allow_html=True)
     
     st.markdown("---")
     
+    # NEW PIPELINE SECTION ADDED HERE
+    st.markdown("### 🛠️ System Architecture (The Big Data Pipeline)")
+    st.write("This system was built to handle the **Volume** and **Variety** of the Yelp Open Dataset.")
+    st.markdown("""
+    1.  **Data Ingestion (Chunking):** * The raw file was **8.6 GB** (JSON).
+        * Used Python Generators to stream data line-by-line to avoid Memory Overflow (RAM Crash).
+    
+    2.  **ETL & Preprocessing:**
+        * **Extraction:** Parsed JSON to CSV.
+        * **Transformation:** Removed 3-star (neutral) reviews to sharpen accuracy.
+        * **Balancing:** Detected Class Imbalance (80% Positive) and applied **Undersampling** to create a perfect 50/50 split.
+
+    3.  **Machine Learning:**
+        * **Vectorization:** TF-IDF (Term Frequency-Inverse Document Frequency).
+        * **Model:** Multinomial Naive Bayes (Probabilistic Classifier).
+    
+    ---
+    **Dataset Source:** [Yelp Open Dataset](https://www.yelp.com/dataset)
+    """)
+
+    st.markdown("---")
     st.markdown("### 🧠 How the Models Work (Old vs. New)")
     st.write("This application features a **Dual-Engine** approach, allowing us to compare traditional Machine Learning with advanced Deep Learning in real-time.")
 
     colA, colB = st.columns(2)
     
     with colA:
+        # HTML strictly flush to the left to prevent Streamlit rendering bugs
         st.markdown("""
-        <div class="mac-card">
-        <h4 style="color:#0071E3;">⚡ The Old Model (Fast Engine)</h4>
-        <b>Algorithm:</b> Multinomial Naive Bayes<br>
-        <b>How it works:</b> This is a statistical model based on probability. It breaks the user's review down into individual words and counts them (TF-IDF vectorization). 
-        <br><br>
-        <b>Pros:</b> Incredibly fast and lightweight. Excellent for analyzing millions of rows of Big Data instantly.<br>
-        <b>Cons:</b> It suffers from "Bag of Words" syndrome. It does not understand word order. If a review says <i>"The food was not good,"</i> it might see the word "good" and accidentally mark it positive.
-        </div>
-        """, unsafe_allow_html=True)
+<div class="mac-card">
+<h4 style="color:#0071E3;">⚡ The Old Model (Fast Engine)</h4>
+<b>Algorithm:</b> Multinomial Naive Bayes<br>
+<b>How it works:</b> This is a statistical model based on probability. It breaks the user's review down into individual words and counts them (TF-IDF vectorization). 
+<br><br>
+<b>Pros:</b> Incredibly fast and lightweight. Excellent for analyzing millions of rows of Big Data instantly.<br>
+<b>Cons:</b> It suffers from "Bag of Words" syndrome. It does not understand word order. If a review says <i>"The food was not good,"</i> it might see the word "good" and accidentally mark it positive.
+</div>
+""", unsafe_allow_html=True)
 
     with colB:
+        # HTML strictly flush to the left
         st.markdown("""
-        <div class="mac-card">
-        <h4 style="color:#0071E3;">🧠 The New Model (Deep Engine)</h4>
-        <b>Algorithm:</b> Custom Attention LSTM (Deep Learning)<br>
-        <b>How it works:</b> This is an artificial neural network with a "memory" (LSTM) and an "Attention Mechanism". Unlike Naive Bayes, it reads the sentence in order. 
-        <br><br>
-        <b>Pros:</b> It understands complex context. The Attention Layer acts like a human eye, assigning mathematical "weight" to the most important words in the sentence. It can easily detect sarcasm and complex sentence structures.<br>
-        <b>Cons:</b> Requires significantly more computing power and time to train.
-        </div>
-        """, unsafe_allow_html=True)
+<div class="mac-card">
+<h4 style="color:#0071E3;">🧠 The New Model (Deep Engine)</h4>
+<b>Algorithm:</b> Custom Attention LSTM (Deep Learning)<br>
+<b>How it works:</b> This is an artificial neural network with a "memory" (LSTM) and an "Attention Mechanism". Unlike Naive Bayes, it reads the sentence in order. 
+<br><br>
+<b>Pros:</b> It understands complex context. The Attention Layer acts like a human eye, assigning mathematical "weight" to the most important words in the sentence. It can easily detect sarcasm and complex sentence structures.<br>
+<b>Cons:</b> Requires significantly more computing power and time to train.
+</div>
+""", unsafe_allow_html=True)
 
     st.markdown("---")
     st.markdown("### 📊 Dataset Statistics")
