@@ -28,7 +28,7 @@ class SimpleAttention(tf.keras.layers.Layer):
         return tf.keras.backend.sum(output, axis=1)
 
 # -------------------------------------------------------------------------
-# 2. APP CONFIG & FORCED APPLE CSS
+# 2. APP CONFIG & APPLE PREMIUM CSS
 # -------------------------------------------------------------------------
 st.set_page_config(
     page_title="Intelligence AI",
@@ -43,19 +43,16 @@ if 'nav_menu' not in st.session_state:
 def go_to_tool():
     st.session_state.nav_menu = "Intelligence Tool"
 
-# THE CSS FIX: Adding !important to force Apple fonts/colors on Sidebar
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
     
-    /* Force Apple Font on everything */
     html, body, [class*="css"], [data-testid="stSidebar"] * {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-family: 'Inter', -apple-system, sans-serif !important;
     }
     
     .stApp { background-color: #F5F5F7; }
 
-    /* Sidebar Professional Look */
     [data-testid="stSidebar"] {
         background-color: #FFFFFF !important;
         border-right: 1px solid #E5E5EA !important;
@@ -71,7 +68,7 @@ st.markdown("""
         font-weight: 600 !important;
     }
 
-    /* Results Cards */
+    /* Mac Style Result Cards */
     .mac-card {
         background: white;
         border-radius: 18px;
@@ -90,8 +87,8 @@ st.markdown("""
     }
 
     .engine-tag { font-size: 11px; color: #86868B; text-transform: uppercase; font-weight: 600; margin-bottom: 8px; }
-    .pos { color: #34C759 !important; font-weight: 700; font-size: 28px; margin: 0; }
-    .neg { color: #FF3B30 !important; font-weight: 700; font-size: 28px; margin: 0; }
+    .pos { color: #34C759 !important; font-weight: 700; font-size: 26px; margin: 0; }
+    .neg { color: #FF3B30 !important; font-weight: 700; font-size: 26px; margin: 0; }
     .conf-val { font-size: 14px; color: #86868B; margin-top: 4px; }
 </style>
 """, unsafe_allow_html=True)
@@ -135,7 +132,7 @@ st.sidebar.markdown(f"""
 """, unsafe_allow_html=True)
 
 st.sidebar.markdown("---")
-st.sidebar.caption(f"✅ System Online | {len(df):,} Reviews")
+st.sidebar.caption(f"✅ System Live | {len(df):,} Reviews")
 
 # -------------------------------------------------------------------------
 # 5. PAGES
@@ -152,11 +149,10 @@ elif menu == "Intelligence Tool":
     
     if st.button("Analyze Sentiment"):
         if user_input.strip():
-            # Engine 1
+            # Run Engines
             nb_p = nb_model.predict(tfidf.transform([user_input]))[0]
             nb_c = np.max(nb_model.predict_proba(tfidf.transform([user_input]))[0])
             
-            # Engine 2
             dl_c = 0
             if deep_engine_status:
                 seq = tokenizer.texts_to_sequences([user_input])
@@ -167,7 +163,7 @@ elif menu == "Intelligence Tool":
 
             nb_win = nb_c >= dl_c
 
-            # CRITICAL: NO INDENTATION ALLOWED BEFORE THE HTML STRING
+            # FIXED RENDER (NO INDENTATION)
             html_nb = f"""
 <div class="mac-card {'winner-card' if nb_win else ''}">
 {f'<div class="winner-badge">MOST TRUSTED</div>' if nb_win else ''}
@@ -176,7 +172,8 @@ elif menu == "Intelligence Tool":
 <p class="conf-val">Confidence: {nb_c*100:.1f}%</p>
 </div>"""
 
-            html_dl = ""
+            st.markdown(html_nb, unsafe_allow_html=True)
+
             if deep_engine_status:
                 html_dl = f"""
 <div class="mac-card {'winner-card' if not nb_win else ''}">
@@ -185,20 +182,48 @@ elif menu == "Intelligence Tool":
 <p class="{'pos' if dl_sent=='POSITIVE' else 'neg'}">{dl_sent}</p>
 <p class="conf-val">Confidence: {dl_c*100:.1f}%</p>
 </div>"""
-
-            st.markdown(html_nb, unsafe_allow_html=True)
-            if html_dl:
                 st.markdown(html_dl, unsafe_allow_html=True)
         else:
-            st.warning("Please enter some text.")
+            st.warning("Enter text first.")
 
 elif menu == "Project Details":
     st.title("Architecture")
+    
+    # PIPELINE SECTION
     st.markdown("### 🛠️ System Architecture (The Big Data Pipeline)")
-    st.write("Handling Volume and Variety of 8.6GB Yelp Data.")
     st.markdown("""
-    1. **Data Ingestion:** Used Python Generators line-by-line.
-    2. **ETL:** Parsed JSON to CSV, filtered neutral reviews.
-    3. **Balancing:** 50/50 split via Undersampling.
+    This system was built to handle the **Volume** and **Variety** of the Yelp Open Dataset.
+    
+    1.  **Data Ingestion (Chunking):** The raw file was **8.6 GB** (JSON). Used Python Generators to stream data line-by-line.
+    2.  **ETL & Preprocessing:** Parsed JSON to CSV, removed neutral (3-star) reviews.
+    3.  **Balancing:** Applied **Undersampling** to achieve a perfect 50/50 split.
+    4.  **Vectorization:** Used **TF-IDF** for the Fast Engine and **Embedding/Padding** for the Deep Engine.
     """)
+
+    st.markdown("---")
+
+    # DUAL ENGINE COMPARISON
+    st.markdown("### 🧠 Dual-Engine Intelligence")
+    colA, colB = st.columns(2)
+    
+    with colA:
+        st.markdown("""
+        **⚡ Fast Engine (Naive Bayes)** * **Type:** Statistical Probability  
+        * **Strength:** Extremely fast, works with massive datasets.  
+        * **Weakness:** Doesn't understand word order (Bag of Words).
+        """)
+    
+    with colB:
+        st.markdown("""
+        **🧠 Deep Engine (Attention LSTM)** * **Type:** Deep Learning Neural Network  
+        * **Strength:** Understands context and word sequences using an Attention Mechanism.  
+        * **Weakness:** Computationally expensive.
+        """)
+
+    st.markdown("---")
+    st.markdown("### 📊 Dataset Statistics")
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Total Records", f"{len(df):,}")
+    m2.metric("Positive Samples", f"{len(df[df['sentiment']=='positive']):,}")
+    m3.metric("Negative Samples", f"{len(df[df['sentiment']=='negative']):,}")
     st.bar_chart(df['sentiment'].value_counts(), color="#0071E3")
