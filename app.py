@@ -11,7 +11,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 
 # -------------------------------------------------------------------------
-# 1. CUSTOM ATTENTION LAYER (Required for Deep Learning Model)
+# 1. CUSTOM ATTENTION LAYER
 # -------------------------------------------------------------------------
 @tf.keras.utils.register_keras_serializable()
 class SimpleAttention(tf.keras.layers.Layer):
@@ -28,16 +28,16 @@ class SimpleAttention(tf.keras.layers.Layer):
         return tf.keras.backend.sum(output, axis=1)
 
 # -------------------------------------------------------------------------
-# 2. APP CONFIGURATION & PREMIUM APPLE CSS
+# 2. APP CONFIG & FORCED SIDEBAR CSS
 # -------------------------------------------------------------------------
 st.set_page_config(
     page_title="Intelligence: Big Data Analyzer",
     page_icon="",
     layout="wide",
-    initial_sidebar_state="expanded" # Forces sidebar to be open on load
+    initial_sidebar_state="expanded" 
 )
 
-# Manage navigation via Session State for the "Launch" button
+# Logic for Home Button
 if 'nav_menu' not in st.session_state:
     st.session_state.nav_menu = "Home"
 
@@ -46,194 +46,150 @@ def go_to_tool():
 
 st.markdown("""
     <style>
-    /* Global Styling */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
-    html, body, [class*="css"] { font-family: 'Inter', -apple-system, sans-serif; }
-    
-    .stApp { background-color: #F5F5F7; color: #1D1D1F; }
+    /* FORCE SIDEBAR TO STAY OPEN ON DESKTOP */
+    @media (min-width: 992px) {
+        section[data-testid="stSidebar"][aria-expanded="false"] {
+            margin-left: 0px !important;
+        }
+    }
 
-    /* Fix Sidebar Toggle Button */
+    /* Make the Sidebar Toggle Button Very Obvious (Apple Blue) */
     button[kind="headerNoContext"] {
         background-color: #0071E3 !important;
         color: white !important;
-        border-radius: 50% !important;
-        box-shadow: 0 2px 10px rgba(0,113,227,0.3) !important;
+        border-radius: 10px !important;
+        width: 50px !important;
+        height: 50px !important;
+        position: fixed !important;
+        top: 10px !important;
+        left: 10px !important;
+        z-index: 999999 !important;
     }
 
-    /* Hide Default Headers */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
+    /* Global Apple Styling */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+    html, body, [class*="css"] { font-family: 'Inter', -apple-system, sans-serif; }
+    .stApp { background-color: #F5F5F7; }
     
-    /* Apple Pill Button */
+    /* Clean Cards and Buttons */
     div.stButton > button {
         background-color: #0071E3 !important;
         color: white !important;
-        font-size: 16px !important;
-        font-weight: 600 !important;
-        border-radius: 980px !important; 
+        border-radius: 980px !important;
+        padding: 12px 30px !important;
         border: none !important;
-        padding: 14px 32px !important;
-        box-shadow: 0 4px 14px rgba(0, 113, 227, 0.3) !important;
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+        font-weight: 600 !important;
     }
-    div.stButton > button:hover {
-        background-color: #0077ED !important;
-        transform: scale(1.03) !important;
-        box-shadow: 0 8px 24px rgba(0, 113, 227, 0.45) !important;
-    }
-
-    /* Apple Glass Cards (Fixed indention bug) */
+    
     .mac-card {
-        background: rgba(255, 255, 255, 0.85);
-        backdrop-filter: saturate(180%) blur(25px);
-        border-radius: 20px;
-        padding: 24px;
+        background: white;
+        border-radius: 18px;
+        padding: 22px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        border: 1px solid #E5E5EA;
         margin-bottom: 20px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-        border: 1px solid rgba(255,255,255,0.6);
     }
-    .engine-title { font-size: 12px; font-weight: 600; color: #86868B; text-transform: uppercase; margin-bottom: 8px; }
-    .result-text { font-size: 30px; font-weight: 700; margin: 0; }
-    .pos { color: #34C759; } 
-    .neg { color: #FF3B30; } 
-    .conf-text { font-size: 14px; color: #86868B; margin-top: 5px; }
+    .pos { color: #34C759; font-weight: bold; }
+    .neg { color: #FF3B30; font-weight: bold; }
     </style>
 """, unsafe_allow_html=True)
 
 # -------------------------------------------------------------------------
-# 3. BACKEND: LOAD MODELS
+# 3. BACKEND LOAD
 # -------------------------------------------------------------------------
 @st.cache_resource
 def load_assets():
     df = pd.read_csv("yelp_web.csv").dropna(subset=['text'])
     df = df[df['stars'] != 3]
     df['sentiment'] = df['stars'].apply(lambda x: 'positive' if x > 3 else 'negative')
-    
     tfidf = TfidfVectorizer(stop_words='english', ngram_range=(1,2), max_features=5000)
     X_vec = tfidf.fit_transform(df['text'])
     nb_model = MultinomialNB().fit(X_vec, df['sentiment'])
-    
     try:
         dl_model = load_model('sentiment_attention_model.keras', custom_objects={'SimpleAttention': SimpleAttention})
         with open('tokenizer.pkl', 'rb') as handle:
             tokenizer = pickle.load(handle)
-        deep_status = True
+        status = True
     except:
-        dl_model, tokenizer, deep_status = None, None, False
-        
-    return df, tfidf, nb_model, dl_model, tokenizer, deep_status
+        dl_model, tokenizer, status = None, None, False
+    return df, tfidf, nb_model, dl_model, tokenizer, status
 
 df, tfidf, nb_model, dl_model, tokenizer, deep_engine_status = load_assets()
 
 # -------------------------------------------------------------------------
-# 4. SIDEBAR NAVIGATION
+# 4. SIDEBAR 
 # -------------------------------------------------------------------------
-st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2103/2103633.png", width=70)
+st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2103/2103633.png", width=80)
 st.sidebar.title("Navigation")
 menu = st.sidebar.radio("Go to:", ["Home", "Intelligence Tool", "Project Details"], key="nav_menu")
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("""
-    <div style="background-color: #FFFFFF; padding: 20px; border-radius: 16px; box-shadow: 0 4px 14px rgba(0,0,0,0.03); border: 1px solid #E5E5EA;">
-        <p style="color: #86868B; font-size: 11px; margin-bottom: 4px; font-weight: 600; text-transform: uppercase;">Developed by</p>
-        <p style="color: #1D1D1F; font-size: 17px; font-weight: 600; margin: 0;">Mohammad Hasnain</p>
-        <p style="color: #0071E3; font-size: 13px; margin: 4px 0 0 0;">BS Artificial Intelligence</p>
+st.sidebar.markdown(f"""
+    <div style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #E5E5EA;">
+        <p style="margin:0; font-size: 10px; color: #86868B;">STUDENT AI PROJECT</p>
+        <p style="margin:0; font-weight: bold; font-size: 16px;">Mohammad Hasnain</p>
+        <p style="margin:0; font-size: 12px; color: #0071E3;">BS Artificial Intelligence</p>
     </div>
 """, unsafe_allow_html=True)
 
 st.sidebar.markdown("---")
-if deep_engine_status:
-    st.sidebar.success(f"✅ Dual-Engine Online\n\n📊 {len(df):,} Reviews")
-else:
-    st.sidebar.warning("⚠️ Deep Engine Offline")
+st.sidebar.caption(f"✅ System Live | {len(df):,} reviews")
 
 # -------------------------------------------------------------------------
-# 5. PAGE: HOME
+# 5. PAGES
 # -------------------------------------------------------------------------
 if menu == "Home":
     st.title("Intelligence")
-    st.markdown("<h2 style='color: #86868B; font-weight: 300; margin-top: -15px;'>Pro-level sentiment analysis.</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #86868B; font-size: 20px;'>Pro-level sentiment analysis.</p>", unsafe_allow_html=True)
     st.image("https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2850&auto=format&fit=crop", use_column_width=True)
     
-    st.markdown("""
-    ### The next generation of Big Data Feedback.
-    - ⚡ **Dual-Engine Architecture:** Statistical ML vs. Deep Learning.
-    - ⚖️ **Balanced Dataset:** Undersampled Yelp Big Data.
-    - 🧠 **Context Awareness:** Attention LSTM understands word order.
-    """)
-    st.write("")
+    st.markdown("### The next generation of Big Data Feedback.")
     st.button("Launch Intelligence Tool", on_click=go_to_tool)
 
-# -------------------------------------------------------------------------
-# 6. PAGE: INTELLIGENCE TOOL
-# -------------------------------------------------------------------------
 elif menu == "Intelligence Tool":
     st.title("Feedback Analyzer")
-    user_input = st.text_area("Review", height=200, placeholder="Example: The service was slow but the food was delicious!", label_visibility="hidden")
+    user_input = st.text_area("Review", height=150, placeholder="Paste a customer review here...", label_visibility="hidden")
     
     if st.button("Analyze Sentiment"):
         if user_input.strip():
-            col_res1, col_res2 = st.columns([1.5, 1])
-            with col_res2:
-                # 1. Naive Bayes
-                nb_p = nb_model.predict(tfidf.transform([user_input]))[0]
-                nb_c = np.max(nb_model.predict_proba(tfidf.transform([user_input]))[0])
-                nb_clr = "pos" if nb_p == "positive" else "neg"
-                nb_emoji = "😊" if nb_p == "positive" else "😡"
+            # Engine 1
+            nb_p = nb_model.predict(tfidf.transform([user_input]))[0]
+            nb_c = np.max(nb_model.predict_proba(tfidf.transform([user_input]))[0])
+            
+            # Render Cards
+            html = f"""
+            <div class="mac-card">
+                <p style="font-size:12px; color:#86868B;">⚡ FAST ENGINE</p>
+                <p class="result-text {'pos' if nb_p=='positive' else 'neg'}">{nb_p.upper()}</p>
+                <p style="font-size:14px;">Confidence: {nb_c*100:.1f}%</p>
+            </div>
+            """
+            
+            if deep_engine_status:
+                seq = tokenizer.texts_to_sequences([user_input])
+                padded = pad_sequences(seq, maxlen=100, padding='post', truncating='post')
+                dl_prob = dl_model.predict(padded)[0][0]
+                dl_sent = "POSITIVE" if dl_prob > 0.5 else "NEGATIVE"
+                dl_conf = dl_prob if dl_prob > 0.5 else (1 - dl_prob)
                 
-                # 2. Attention Model
-                if deep_engine_status:
-                    seq = tokenizer.texts_to_sequences([user_input])
-                    padded = pad_sequences(seq, maxlen=100, padding='post', truncating='post')
-                    dl_p = dl_model.predict(padded)[0][0]
-                    dl_s = "positive" if dl_p > 0.5 else "negative"
-                    dl_c = dl_p if dl_p > 0.5 else (1 - dl_p)
-                    dl_clr = "pos" if dl_s == "positive" else "neg"
-                    dl_emoji = "😊" if dl_s == "positive" else "😡"
-
-                # RENDER HTML
-                html = f"""
-<div class="mac-card">
-<div class="engine-title">⚡ Fast Engine (Naive Bayes)</div>
-<p class="result-text {nb_clr}">{nb_emoji} {nb_p.capitalize()}</p>
-<p class="conf-text">Confidence: {nb_c*100:.1f}%</p>
-</div>
-"""
-                if deep_engine_status:
-                    html += f"""
-<div class="mac-card">
-<div class="engine-title">🧠 Deep Engine (Attention LSTM)</div>
-<p class="result-text {dl_clr}">{dl_emoji} {dl_s.capitalize()}</p>
-<p class="conf-text">Confidence: {dl_c*100:.1f}%</p>
-</div>
-"""
-                st.markdown(html, unsafe_allow_html=True)
+                html += f"""
+                <div class="mac-card">
+                    <p style="font-size:12px; color:#86868B;">🧠 DEEP ENGINE (ATTENTION)</p>
+                    <p class="result-text {'pos' if dl_sent=='POSITIVE' else 'neg'}">{dl_sent}</p>
+                    <p style="font-size:14px;">Confidence: {dl_conf*100:.1f}%</p>
+                </div>
+                """
+            st.markdown(html, unsafe_allow_html=True)
         else:
-            st.warning("⚠️ Please enter text first.")
+            st.warning("Please enter some text.")
 
-# -------------------------------------------------------------------------
-# 7. PAGE: PROJECT DETAILS
-# -------------------------------------------------------------------------
 elif menu == "Project Details":
-    st.title("Project Architecture")
+    st.title("Architecture")
     st.markdown("### 🛠️ System Architecture (The Big Data Pipeline)")
+    st.write("Handling Volume and Variety of 8.6GB Yelp Data.")
     st.markdown("""
-    1.  **Data Ingestion (Chunking):** * The raw file was **8.6 GB** (JSON).
-        * Used Python Generators to stream data line-by-line.
-    2.  **ETL & Preprocessing:**
-        * **Extraction:** Parsed JSON to CSV.
-        * **Transformation:** Removed 3-star (neutral) reviews.
-        * **Balancing:** Applied **Undersampling** to create a 50/50 split.
-    3.  **Machine Learning:**
-        * **Vectorization:** TF-IDF.
-        * **Model:** Multinomial Naive Bayes & Attention LSTM.
+    1. **Data Ingestion:** Used Python Generators line-by-line.
+    2. **ETL:** Parsed JSON to CSV, filtered 3-star reviews.
+    3. **Balancing:** 50/50 split via Undersampling.
     """)
-    
-    st.markdown("---")
-    st.markdown("### 📊 Dataset Statistics")
-    m1, m2, m3 = st.columns(3)
-    m1.metric("Total Records", f"{len(df):,}")
-    m2.metric("Positive Samples", f"{len(df[df['sentiment']=='positive']):,}")
-    m3.metric("Negative Samples", f"{len(df[df['sentiment']=='negative']):,}")
     st.bar_chart(df['sentiment'].value_counts(), color="#0071E3")
