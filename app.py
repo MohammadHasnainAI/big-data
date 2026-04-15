@@ -11,7 +11,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 
 # -------------------------------------------------------------------------
-# 1. CUSTOM ATTENTION LAYER
+# 1. CUSTOM ATTENTION LAYER (Required for Deep Learning Model)
 # -------------------------------------------------------------------------
 @tf.keras.utils.register_keras_serializable()
 class SimpleAttention(tf.keras.layers.Layer):
@@ -28,16 +28,16 @@ class SimpleAttention(tf.keras.layers.Layer):
         return tf.keras.backend.sum(output, axis=1)
 
 # -------------------------------------------------------------------------
-# 2. APP CONFIGURATION & ULTRA-SMOOTH APPLE CSS
+# 2. APP CONFIGURATION & SMOOTH CLASSIC CSS
 # -------------------------------------------------------------------------
 st.set_page_config(
     page_title="Intelligence: Big Data Analyzer",
-    page_icon="",
+    page_icon="🧠",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Setup Session State for Navigation Button
+# Setup Session State for the new Home Page Button
 if 'nav_menu' not in st.session_state:
     st.session_state.nav_menu = "Home"
 
@@ -46,99 +46,43 @@ def go_to_tool():
 
 st.markdown("""
     <style>
-    /* Global Apple Font & Background */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
-    
-    html, body, [class*="css"] {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-    
-    .stApp {
-        background-color: #F5F5F7; 
-        color: #1D1D1F;
-    }
-
-    /* Hide Default Streamlit Elements */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
-    /* Ultra-Smooth Apple Pill Button */
+    /* Smooth & Professional Red Button */
     div.stButton > button {
-        background-color: #0071E3; 
+        background-color: #D32323; /* Classic Yelp Red */
         color: white !important;
         font-size: 16px !important;
-        font-weight: 600 !important;
-        border-radius: 980px !important; 
+        font-weight: bold !important;
+        border-radius: 8px !important;
         border: none !important;
-        padding: 14px 32px !important;
-        box-shadow: 0 4px 14px rgba(0, 113, 227, 0.3) !important;
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+        padding: 10px 24px !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+        transition: all 0.3s ease !important;
     }
     div.stButton > button:hover {
-        background-color: #0077ED !important;
-        transform: scale(1.03) !important; 
-        box-shadow: 0 8px 24px rgba(0, 113, 227, 0.45) !important;
+        background-color: #b31e1e !important;
+        color: white !important;
+        box-shadow: 0 8px 15px rgba(211, 35, 35, 0.3) !important;
+        transform: translateY(-2px) !important;
     }
     div.stButton > button:active {
-        transform: scale(0.98) !important; 
+        transform: translateY(1px) !important;
     }
     
-    /* Input Text Area Refinement */
-    .stTextArea textarea {
-        background-color: #FFFFFF;
-        border-radius: 16px;
-        border: 1px solid #E5E5EA;
-        padding: 18px;
-        font-size: 16px;
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
-        transition: border-color 0.3s ease;
+    /* Metrics Styling */
+    [data-testid="stMetricValue"] {
+        font-size: 28px;
+        color: #D32323;
+        font-weight: bold;
     }
+    
+    /* Input Area Focus Effect */
     .stTextArea textarea:focus {
-        border-color: #0071E3;
-        box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.15);
-    }
-
-    /* Apple Premium Glass Cards */
-    .mac-card {
-        background: rgba(255, 255, 255, 0.85);
-        backdrop-filter: saturate(180%) blur(25px);
-        -webkit-backdrop-filter: saturate(180%) blur(25px);
-        border-radius: 20px;
-        padding: 24px;
-        margin-bottom: 20px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-        border: 1px solid rgba(255,255,255,0.6);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    .mac-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 15px 35px rgba(0,0,0,0.08);
-    }
-    
-    .engine-title {
-        font-size: 13px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 1.2px;
-        color: #86868B;
-        margin-bottom: 10px;
-    }
-    
-    .result-text {
-        font-size: 32px;
-        font-weight: 700;
-        margin: 0;
-    }
-    
-    .pos { color: #34C759; } 
-    .neg { color: #FF3B30; } 
-    
-    .conf-text {
-        font-size: 15px;
-        color: #86868B;
-        font-weight: 400;
-        margin-top: 6px;
+        border-color: #D32323 !important;
+        box-shadow: 0 0 0 2px rgba(211, 35, 35, 0.2) !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -170,21 +114,21 @@ def load_all_assets():
 df, tfidf, nb_model, dl_model, tokenizer, deep_engine_status = load_all_assets()
 
 # -------------------------------------------------------------------------
-# 4. SIDEBAR NAVIGATION
+# 4. CLASSIC SIDEBAR NAVIGATION
 # -------------------------------------------------------------------------
-st.sidebar.image("https://cdn-icons-png.flaticon.com/512/732/732100.png", width=60)
+st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2103/2103633.png", width=100)
 st.sidebar.title("Navigation")
 
-# Link the sidebar radio to our session state!
+# Radio button linked to session state!
 menu = st.sidebar.radio("Go to:", ["Home", "Intelligence Tool", "Project Details"], key="nav_menu")
 
 st.sidebar.markdown("---")
 
 st.sidebar.markdown("""
-    <div style="background-color: #FFFFFF; padding: 20px; border-radius: 16px; box-shadow: 0 4px 14px rgba(0,0,0,0.03);">
-        <p style="color: #86868B; font-size: 12px; margin-bottom: 4px; font-weight: 600;">DEVELOPED BY</p>
-        <p style="color: #1D1D1F; font-size: 16px; font-weight: 600; margin: 0;">Mohammad Hasnain</p>
-        <p style="color: #0071E3; font-size: 13px; margin: 0;">BS Artificial Intelligence</p>
+    <div style="background-color: #e6f3ff; padding: 15px; border-radius: 10px; border-left: 5px solid #2196f3; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+        <small style="color: #555;">Developed by:</small><br>
+        <strong style="font-size: 1.1em; color: #333;">Mohammad Hasnain</strong><br>
+        <span style="color: #0066cc;">BS Artificial Intelligence</span>
     </div>
 """, unsafe_allow_html=True)
 
@@ -198,63 +142,64 @@ else:
 # 5. PAGE: HOME
 # -------------------------------------------------------------------------
 if menu == "Home":
-    st.title("Intelligence")
-    st.markdown("<h2 style='color: #86868B; font-weight: 300; margin-top: -15px;'>Pro-level sentiment analysis.</h2>", unsafe_allow_html=True)
-    
-    st.image("https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2850&auto=format&fit=crop", use_column_width=True)
+    st.title("🧠 Intelligence: Big Data Analyzer")
+    st.image("https://cdn.dribbble.com/users/2064121/screenshots/15865261/media/58102a06145892552601724682057636.jpg?compress=1&resize=1200x900", use_column_width=True)
     
     st.markdown("""
-    ### The next generation of Big Data Feedback.
-    This project combines traditional **Machine Learning** with modern **Deep Learning** to analyze customer sentiment with incredible precision.
+    ### Welcome to the Big Data Feedback System
+    This project uses **Machine Learning (Naive Bayes)** and **Deep Learning (Attention LSTM)** to analyze customer sentiment from the **Yelp Open Dataset**.
 
-    - ⚡ **Dual-Engine Architecture:** Compares statistical ML with Deep Learning.
-    - ⚖️ **Balanced Dataset:** Undersampled Yelp Big Data.
-    - 🧠 **Context Awareness:** LSTM understands the sequence and context of words.
+    **Key Features:**
+    - ⚡ **Dual-Engine Analysis:** Compares probability ML with Neural Networks.
+    - ⚖️ **Balanced Dataset:** Undersampled to prevent bias.
+    - 📂 **Big Data Pipeline:** Handled 8GB+ of raw JSON data.
     """)
     
-    st.write("") # Add a little space
-    # HERE IS THE NEW BUTTON!
-    st.button("Launch Intelligence Tool", on_click=go_to_tool)
+    st.write("")
+    # Added the missing button to the home page!
+    st.button("Launch Intelligence Tool 🚀", on_click=go_to_tool)
 
 # -------------------------------------------------------------------------
 # 6. PAGE: INTELLIGENCE TOOL
 # -------------------------------------------------------------------------
 elif menu == "Intelligence Tool":
-    st.title("Feedback Analyzer")
-    st.markdown("<p style='color: #86868B; font-size: 18px;'>Type a review and let the Dual-Engine AI analyze its sentiment.</p>", unsafe_allow_html=True)
+    st.title("🚀 Customer Feedback Analyzer")
+    st.write("Enter unstructured review text below to detect sentiment using AI.")
     
-    st.write("")
+    st.divider()
 
     col1, col2 = st.columns([1.5, 1], gap="large")
 
     with col1:
-        user_input = st.text_area("Review Text", height=200, placeholder="Example: The service was slow but the food was absolutely delicious!", label_visibility="hidden")
+        user_input = st.text_area("✍️ Input Feedback:", height=200, placeholder="Example: The service was slow but the food was absolutely delicious!")
         analyze_btn = st.button("Analyze Sentiment")
 
     with col2:
-        st.markdown("<p style='font-size: 14px; font-weight: 600; color: #86868B; margin-bottom: 10px;'>PREDICTION RESULTS</p>", unsafe_allow_html=True)
+        st.write("#### 🔍 Prediction Results")
         
         results_container = st.container()
         quote_placeholder = st.empty()
         
         if analyze_btn:
             if user_input.strip():
+                # Original Quotes List
                 quotes = [
-                    "**“Design is not just what it looks like and feels like. Design is how it works.”**\n— Steve Jobs",
-                    "**“Innovation distinguishes between a leader and a follower.”**\n— Steve Jobs",
-                    "**“Simplicity is the ultimate sophistication.”**\n— Leonardo da Vinci"
+                    "**“It always seems impossible until it’s done.”**\n— Steve Jobs",
+                    "**“The future depends on what you do today.”**\n— Albert Einstein",
+                    "**“Opportunities don't happen, you create them.”**\n— William James",
+                    "**“A journey of a thousand miles begins with a single step.”**\n— Lao Tzu"
                 ]
                 selected_quote = random.choice(quotes)
                 
-                quote_placeholder.info(f"✨ **Analyzing...**\n\n{selected_quote}")
-                time.sleep(2.0)
+                quote_placeholder.info(f"💡 **Processing Big Data...**\n\n{selected_quote}")
                 
+                with st.spinner("Analyzing vectors..."):
+                    time.sleep(2.0)
+                
+                # --- PREDICTIONS ---
                 input_vec = tfidf.transform([user_input])
                 nb_pred = nb_model.predict(input_vec)[0]
                 nb_conf = np.max(nb_model.predict_proba(input_vec)[0])
-                
-                nb_class = "pos" if nb_pred == 'positive' else "neg"
-                nb_emoji = "😊" if nb_pred == 'positive' else "😡"
                 
                 if deep_engine_status:
                     seq = tokenizer.texts_to_sequences([user_input])
@@ -262,29 +207,30 @@ elif menu == "Intelligence Tool":
                     dl_prob = dl_model.predict(padded)[0][0]
                     dl_sent = "positive" if dl_prob > 0.5 else "negative"
                     dl_conf = dl_prob if dl_prob > 0.5 else (1 - dl_prob)
-                    
-                    dl_class = "pos" if dl_sent == 'positive' else "neg"
-                    dl_emoji = "😊" if dl_sent == 'positive' else "😡"
 
-                html_output = f"""
-<div class="mac-card">
-<div class="engine-title">⚡ Fast Engine (Naive Bayes)</div>
-<p class="result-text {nb_class}">{nb_emoji} {nb_pred.capitalize()}</p>
-<p class="conf-text">Confidence: {nb_conf*100:.1f}%</p>
-</div>
-"""
+                # --- RENDER HTML (BUG FIXED: Written on one line to prevent markdown errors) ---
+                nb_bg = "#d4edda" if nb_pred == 'positive' else "#f8d7da"
+                nb_border = "#28a745" if nb_pred == 'positive' else "#dc3545"
+                nb_text = "#155724" if nb_pred == 'positive' else "#721c24"
+                nb_emoji = "😊" if nb_pred == 'positive' else "😡"
+                
+                html_output = f'<div style="background-color: {nb_bg}; padding: 15px; border-radius: 8px; border-left: 5px solid {nb_border}; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);"><h4 style="color: {nb_text}; margin:0; font-size: 14px;">⚡ FAST ENGINE (NAIVE BAYES)</h4><p style="color: {nb_text}; font-size: 22px; font-weight: bold; margin: 5px 0 0 0;">{nb_emoji} {nb_pred.upper()}</p><p style="color: #444; margin: 0; font-size: 14px;">Confidence: <b>{nb_conf*100:.1f}%</b></p></div>'
+
                 if deep_engine_status:
-                    html_output += f"""
-<div class="mac-card">
-<div class="engine-title">🧠 Deep Engine (Attention LSTM)</div>
-<p class="result-text {dl_class}">{dl_emoji} {dl_sent.capitalize()}</p>
-<p class="conf-text">Confidence: {dl_conf*100:.1f}%</p>
-</div>
-"""
+                    dl_bg = "#d4edda" if dl_sent == 'positive' else "#f8d7da"
+                    dl_border = "#28a745" if dl_sent == 'positive' else "#dc3545"
+                    dl_text = "#155724" if dl_sent == 'positive' else "#721c24"
+                    dl_emoji = "😊" if dl_sent == 'positive' else "😡"
+                    
+                    html_output += f'<div style="background-color: {dl_bg}; padding: 15px; border-radius: 8px; border-left: 5px solid {dl_border}; box-shadow: 0 4px 6px rgba(0,0,0,0.05);"><h4 style="color: {dl_text}; margin:0; font-size: 14px;">🧠 DEEP ENGINE (ATTENTION LSTM)</h4><p style="color: {dl_text}; font-size: 22px; font-weight: bold; margin: 5px 0 0 0;">{dl_emoji} {dl_sent.upper()}</p><p style="color: #444; margin: 0; font-size: 14px;">Confidence: <b>{dl_conf*100:.1f}%</b></p></div>'
+
                 with results_container:
                     st.markdown(html_output, unsafe_allow_html=True)
                 
+                quote_placeholder.info(f"✨ **Inspiration for you:**\n\n{selected_quote}")
+                time.sleep(15)
                 quote_placeholder.empty()
+
             else:
                 st.warning("⚠️ Please enter text first.")
 
@@ -292,11 +238,21 @@ elif menu == "Intelligence Tool":
 # 7. PAGE: PROJECT DETAILS
 # -------------------------------------------------------------------------
 elif menu == "Project Details":
-    st.title("Project Architecture")
-    st.markdown("<p style='color: #86868B; font-size: 18px;'>Deep dive into the models and Big Data pipeline powering this application.</p>", unsafe_allow_html=True)
+    st.title("ℹ️ Project Documentation")
     
-    st.markdown("---")
-    
+    st.markdown("""
+    ### Big Data Management & Processing
+    **Student:** Mohammad Hasnain  
+    **Program:** BS Artificial Intelligence (5th Semester)
+
+    ---
+    #### 🎓 Academic Supervision
+    **Supervisor:** Engr. Aneela Habib  
+    *Big Data Management and Processing*
+    ---
+    """)
+
+    # PIPELINE SECTION ADDED HERE
     st.markdown("### 🛠️ System Architecture (The Big Data Pipeline)")
     st.write("This system was built to handle the **Volume** and **Variety** of the Yelp Open Dataset.")
     st.markdown("""
@@ -318,39 +274,23 @@ elif menu == "Project Details":
 
     st.markdown("---")
     st.markdown("### 🧠 How the Models Work (Old vs. New)")
-    st.write("This application features a **Dual-Engine** approach, allowing us to compare traditional Machine Learning with advanced Deep Learning in real-time.")
-
-    colA, colB = st.columns(2)
     
+    colA, colB = st.columns(2)
     with colA:
-        st.markdown("""
-<div class="mac-card">
-<h4 style="color:#0071E3;">⚡ The Old Model (Fast Engine)</h4>
-<b>Algorithm:</b> Multinomial Naive Bayes<br>
-<b>How it works:</b> This is a statistical model based on probability. It breaks the user's review down into individual words and counts them (TF-IDF vectorization). 
-<br><br>
-<b>Pros:</b> Incredibly fast and lightweight. Excellent for analyzing millions of rows of Big Data instantly.<br>
-<b>Cons:</b> It suffers from "Bag of Words" syndrome. It does not understand word order. If a review says <i>"The food was not good,"</i> it might see the word "good" and accidentally mark it positive.
-</div>
-""", unsafe_allow_html=True)
-
+        st.info("**⚡ The Old Model (Fast Engine)**\n\n**Algorithm:** Multinomial Naive Bayes\n\n**How it works:** A statistical model based on probability. It breaks the review down into individual words and counts them.\n\n**Pros:** Incredibly fast and lightweight.\n\n**Cons:** It suffers from \"Bag of Words\" syndrome. It does not understand word order.")
     with colB:
-        st.markdown("""
-<div class="mac-card">
-<h4 style="color:#0071E3;">🧠 The New Model (Deep Engine)</h4>
-<b>Algorithm:</b> Custom Attention LSTM (Deep Learning)<br>
-<b>How it works:</b> This is an artificial neural network with a "memory" (LSTM) and an "Attention Mechanism". Unlike Naive Bayes, it reads the sentence in order. 
-<br><br>
-<b>Pros:</b> It understands complex context. The Attention Layer acts like a human eye, assigning mathematical "weight" to the most important words in the sentence. It can easily detect sarcasm and complex sentence structures.<br>
-<b>Cons:</b> Requires significantly more computing power and time to train.
-</div>
-""", unsafe_allow_html=True)
+        st.success("**🧠 The New Model (Deep Engine)**\n\n**Algorithm:** Custom Attention LSTM\n\n**How it works:** An artificial neural network with an \"Attention Mechanism\". It reads the sentence in order and assigns weight to important words.\n\n**Pros:** Understands complex context and sarcasm.\n\n**Cons:** Requires significantly more computing power to train.")
 
     st.markdown("---")
     st.markdown("### 📊 Dataset Statistics")
-    st.write("To ensure the AI is not biased, the dataset was strictly balanced using an Undersampling Algorithm.")
     
     m1, m2, m3 = st.columns(3)
     m1.metric("Total Records", f"{len(df):,}")
     m2.metric("Positive Samples", f"{len(df[df['sentiment']=='positive']):,}")
     m3.metric("Negative Samples", f"{len(df[df['sentiment']=='negative']):,}")
+    
+    st.write("")
+    st.markdown("**Visualizing Class Balance:**")
+    chart_data = df['sentiment'].value_counts()
+    st.bar_chart(chart_data, color="#D32323")
+    st.caption("Figure 1: Perfect 50/50 Class Balance achieved via Undersampling Algorithm.")
