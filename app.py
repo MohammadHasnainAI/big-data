@@ -11,7 +11,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 
 # -------------------------------------------------------------------------
-# 1. CUSTOM ATTENTION LAYER (Required for Deep Learning Model)
+# 1. CUSTOM ATTENTION LAYER
 # -------------------------------------------------------------------------
 @tf.keras.utils.register_keras_serializable()
 class SimpleAttention(tf.keras.layers.Layer):
@@ -37,6 +37,13 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Setup Session State for Navigation Button
+if 'nav_menu' not in st.session_state:
+    st.session_state.nav_menu = "Home"
+
+def go_to_tool():
+    st.session_state.nav_menu = "Intelligence Tool"
+
 st.markdown("""
     <style>
     /* Global Apple Font & Background */
@@ -47,7 +54,7 @@ st.markdown("""
     }
     
     .stApp {
-        background-color: #F5F5F7; /* Apple Light Gray */
+        background-color: #F5F5F7; 
         color: #1D1D1F;
     }
 
@@ -58,11 +65,11 @@ st.markdown("""
     
     /* Ultra-Smooth Apple Pill Button */
     div.stButton > button {
-        background-color: #0071E3; /* Apple Blue */
+        background-color: #0071E3; 
         color: white !important;
         font-size: 16px !important;
         font-weight: 600 !important;
-        border-radius: 980px !important; /* Perfect Pill Shape */
+        border-radius: 980px !important; 
         border: none !important;
         padding: 14px 32px !important;
         box-shadow: 0 4px 14px rgba(0, 113, 227, 0.3) !important;
@@ -70,11 +77,11 @@ st.markdown("""
     }
     div.stButton > button:hover {
         background-color: #0077ED !important;
-        transform: scale(1.03) !important; /* Smooth pop-out effect */
+        transform: scale(1.03) !important; 
         box-shadow: 0 8px 24px rgba(0, 113, 227, 0.45) !important;
     }
     div.stButton > button:active {
-        transform: scale(0.98) !important; /* Satisfying click effect */
+        transform: scale(0.98) !important; 
     }
     
     /* Input Text Area Refinement */
@@ -124,8 +131,8 @@ st.markdown("""
         margin: 0;
     }
     
-    .pos { color: #34C759; } /* Apple Green */
-    .neg { color: #FF3B30; } /* Apple Red */
+    .pos { color: #34C759; } 
+    .neg { color: #FF3B30; } 
     
     .conf-text {
         font-size: 15px;
@@ -141,7 +148,6 @@ st.markdown("""
 # -------------------------------------------------------------------------
 @st.cache_resource
 def load_all_assets():
-    # 1. Load Naive Bayes (Fast Engine)
     df = pd.read_csv("yelp_web.csv").dropna(subset=['text'])
     df = df[df['stars'] != 3]
     df['sentiment'] = df['stars'].apply(lambda x: 'positive' if x > 3 else 'negative')
@@ -150,7 +156,6 @@ def load_all_assets():
     X_vec = tfidf.fit_transform(df['text'])
     nb_model = MultinomialNB().fit(X_vec, df['sentiment'])
     
-    # 2. Load Attention LSTM (Deep Engine)
     try:
         dl_model = load_model('sentiment_attention_model.keras', custom_objects={'SimpleAttention': SimpleAttention})
         with open('tokenizer.pkl', 'rb') as handle:
@@ -167,9 +172,11 @@ df, tfidf, nb_model, dl_model, tokenizer, deep_engine_status = load_all_assets()
 # -------------------------------------------------------------------------
 # 4. SIDEBAR NAVIGATION
 # -------------------------------------------------------------------------
-st.sidebar.image("https://cdn-icons-png.flaticon.com/512/732/732100.png", width=60) # Apple-like logo
+st.sidebar.image("https://cdn-icons-png.flaticon.com/512/732/732100.png", width=60)
 st.sidebar.title("Navigation")
-menu = st.sidebar.radio("Go to:", ["Home", "Intelligence Tool", "Project Details"])
+
+# Link the sidebar radio to our session state!
+menu = st.sidebar.radio("Go to:", ["Home", "Intelligence Tool", "Project Details"], key="nav_menu")
 
 st.sidebar.markdown("---")
 
@@ -203,9 +210,11 @@ if menu == "Home":
     - ⚡ **Dual-Engine Architecture:** Compares statistical ML with Deep Learning.
     - ⚖️ **Balanced Dataset:** Undersampled Yelp Big Data.
     - 🧠 **Context Awareness:** LSTM understands the sequence and context of words.
-
-    👈 Select **Intelligence Tool** from the sidebar to begin.
     """)
+    
+    st.write("") # Add a little space
+    # HERE IS THE NEW BUTTON!
+    st.button("Launch Intelligence Tool", on_click=go_to_tool)
 
 # -------------------------------------------------------------------------
 # 6. PAGE: INTELLIGENCE TOOL
@@ -240,7 +249,6 @@ elif menu == "Intelligence Tool":
                 quote_placeholder.info(f"✨ **Analyzing...**\n\n{selected_quote}")
                 time.sleep(2.0)
                 
-                # --- PREDICTIONS ---
                 input_vec = tfidf.transform([user_input])
                 nb_pred = nb_model.predict(input_vec)[0]
                 nb_conf = np.max(nb_model.predict_proba(input_vec)[0])
@@ -258,7 +266,6 @@ elif menu == "Intelligence Tool":
                     dl_class = "pos" if dl_sent == 'positive' else "neg"
                     dl_emoji = "😊" if dl_sent == 'positive' else "😡"
 
-                # --- RENDER HTML (BUG FIXED: NO INDENTATION ALLOWED HERE) ---
                 html_output = f"""
 <div class="mac-card">
 <div class="engine-title">⚡ Fast Engine (Naive Bayes)</div>
@@ -290,7 +297,6 @@ elif menu == "Project Details":
     
     st.markdown("---")
     
-    # NEW PIPELINE SECTION ADDED HERE
     st.markdown("### 🛠️ System Architecture (The Big Data Pipeline)")
     st.write("This system was built to handle the **Volume** and **Variety** of the Yelp Open Dataset.")
     st.markdown("""
@@ -317,7 +323,6 @@ elif menu == "Project Details":
     colA, colB = st.columns(2)
     
     with colA:
-        # HTML strictly flush to the left to prevent Streamlit rendering bugs
         st.markdown("""
 <div class="mac-card">
 <h4 style="color:#0071E3;">⚡ The Old Model (Fast Engine)</h4>
@@ -330,7 +335,6 @@ elif menu == "Project Details":
 """, unsafe_allow_html=True)
 
     with colB:
-        # HTML strictly flush to the left
         st.markdown("""
 <div class="mac-card">
 <h4 style="color:#0071E3;">🧠 The New Model (Deep Engine)</h4>
