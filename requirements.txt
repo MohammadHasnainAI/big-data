@@ -1,5 +1,7 @@
-streamlit
-pandas
-scikit-learn
-matplotlib
+flask
+flask-cors
 tensorflow
+scikit-learn
+numpy
+requests
+gunicorn
